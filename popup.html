@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    ul { list-style: none; }
+
+    :root {
+      --bg:        #0b0a07;
+      --bg-1:      #131109;
+      --bg-2:      #1c1a12;
+      --bg-3:      #262318;
+      --line:      rgba(245,166,35,0.12);
+      --line-2:    rgba(245,166,35,0.06);
+      --amber:     #f5a623;
+      --amber-d:   #c47d0e;
+      --amber-bg:  rgba(245,166,35,0.08);
+      --amber-bg2: rgba(245,166,35,0.14);
+      --text:      #f0e8d0;
+      --text-2:    #a89870;
+      --text-3:    #6b5e3e;
+      --text-4:    #3d3520;
+      --green:     #4caf7d;
+      --red:       #e05c4b;
+      --r:         5px;
+      --ease:      cubic-bezier(0.23,1,0.32,1);
+    }
+
+    html { font-size: 13px; }
+
+    body {
+      width: 400px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--text-4); border-radius: 2px; }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 13px;
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; background: var(--bg); z-index: 50;
+    }
+    .header::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--amber), transparent);
+      opacity: 0.3;
+    }
+    .logo { display: flex; align-items: center; gap: 9px; }
+    .logo-aperture { width: 26px; height: 26px; flex-shrink: 0; }
+    .logo-aperture svg { display: block; animation: spin 12s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .logo-name {
+      font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600;
+      letter-spacing: -0.02em; color: var(--text); line-height: 1;
+    }
+    .logo-name em { font-style: italic; color: var(--amber); }
+
+    .hdr-right { display: flex; align-items: center; gap: 4px; }
+    .version-tag {
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+      color: var(--text-4); padding: 2px 5px;
+      border: 1px solid var(--text-4); border-radius: 3px; letter-spacing: 0.05em;
+    }
+    .hdr-btn {
+      width: 28px; height: 28px; border-radius: var(--r);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); transition: color 0.15s, background 0.15s; outline: none;
+    }
+    .hdr-btn:hover { color: var(--amber); background: var(--amber-bg); }
+    .hdr-btn:focus-visible { outline: 1px solid var(--amber); outline-offset: 1px; }
+
+    /* ── PAGE STRIP ── */
+    .page-strip {
+      padding: 10px 16px; background: var(--bg-1);
+      border-bottom: 1px solid var(--line-2);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .favicon { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; opacity: 0.7; }
+    .page-meta { flex: 1; min-width: 0; }
+    .page-title {
+      font-size: 12px; font-weight: 500; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3;
+    }
+    .page-domain {
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-3);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;
+    }
+
+    /* ── PANELS ── */
+    .main { overflow-y: auto; max-height: 420px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* IDLE */
+    .panel-idle {
+      padding: 36px 24px 32px; display: none;
+      flex-direction: column; align-items: center; gap: 18px; text-align: center;
+    }
+    .panel-idle.active { display: flex; }
+    .idle-graphic { position: relative; width: 72px; height: 72px; }
+    .idle-ring {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 1px solid var(--amber);
+    }
+    .idle-ring:nth-child(1) { animation: rp 2.8s var(--ease) infinite; }
+    .idle-ring:nth-child(2) { animation: rp 2.8s var(--ease) 0.6s infinite; }
+    .idle-ring:nth-child(3) { animation: rp 2.8s var(--ease) 1.2s infinite; }
+    @keyframes rp { 0% { transform:scale(0.6); opacity:0; } 50% { opacity:0.6; } 100% { transform:scale(1.4); opacity:0; } }
+    .idle-dot {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 12px; height: 12px; background: var(--amber);
+      border-radius: 50%; box-shadow: 0 0 16px var(--amber);
+    }
+    .idle-heading { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 400; color: var(--text); }
+    .idle-sub { font-size: 12px; color: var(--text-2); line-height: 1.6; max-width: 240px; }
+
+    /* LOADING */
+    .panel-loading {
+      padding: 32px 24px; display: none;
+      flex-direction: column; align-items: center; gap: 20px;
+    }
+    .panel-loading.active { display: flex; }
+    .scanner { width: 64px; height: 64px; position: relative; }
+    .scanner-track { width: 64px; height: 64px; border-radius: 50%; border: 1.5px solid var(--line); position: absolute; }
+    .scanner-ring {
+      width: 64px; height: 64px; position: absolute; border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-top-color: var(--amber); border-right-color: rgba(245,166,35,0.3);
+      animation: sspin 1s linear infinite;
+    }
+    @keyframes sspin { to { transform: rotate(360deg); } }
+    .scanner-dot {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 6px; height: 6px; background: var(--amber); border-radius: 50%;
+      animation: sdot 1s ease-in-out infinite;
+    }
+    @keyframes sdot { 0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1);} 50%{opacity:0.4;transform:translate(-50%,-50%) scale(0.6);} }
+    .loading-label { font-size: 13px; font-weight: 500; color: var(--text); }
+    .loading-step {
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-3);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+    .dots { display: flex; gap: 6px; }
+    .dots span {
+      width: 4px; height: 4px; border-radius: 50%; background: var(--text-4);
+      animation: df 1.5s ease-in-out infinite;
+    }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    .dots span:nth-child(4) { animation-delay: 0.6s; }
+    @keyframes df { 0%,60%,100%{background:var(--text-4);} 30%{background:var(--amber);} }
+
+    /* ERROR */
+    .panel-error { padding: 20px 16px; }
+    .error-card {
+      border: 1px solid rgba(224,92,75,0.25); background: rgba(224,92,75,0.05);
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .error-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .error-icon {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(224,92,75,0.15);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .error-label { font-size: 12px; font-weight: 600; color: var(--red); text-transform: uppercase; letter-spacing: 0.04em; }
+    .error-msg { font-size: 12px; color: var(--text-2); line-height: 1.6; white-space: pre-line; }
+
+    /* SUMMARY */
+    .panel-summary { padding: 0 0 8px; animation: enter 0.35s var(--ease); }
+    @keyframes enter { from { opacity:0; transform:translateY(6px); } }
+
+    .cache-notice {
+      display: none; align-items: center; gap: 6px; padding: 7px 16px;
+      background: var(--amber-bg); border-bottom: 1px solid var(--line);
+      font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
+      color: var(--amber-d); letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .cache-notice.show { display: flex; }
+
+    .s-block { padding: 16px 16px 0; }
+    .s-block + .s-block { padding-top: 14px; }
+    .s-label {
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3);
+      margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+    }
+    .s-label::after { content:''; flex:1; height:1px; background:var(--line-2); }
+
+    .overview {
+      font-family: 'Fraunces', serif; font-size: 14px; font-weight: 300;
+      line-height: 1.75; color: var(--text); font-style: italic;
+    }
+
+    .stat-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+      background: var(--bg-1);
+    }
+    .chip {
+      display: flex; align-items: center; gap: 5px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-2);
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: 20px; padding: 3px 9px 3px 7px;
+    }
+    .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .dot.pos { background: var(--green); }
+    .dot.neg { background: var(--red); }
+    .dot.neu { background: var(--text-3); }
+    .dot.mix { background: var(--amber); }
+
+    .bullets { display: flex; flex-direction: column; }
+    .b-row {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 7px 0; border-bottom: 1px solid var(--line-2);
+      animation: bin 0.3s var(--ease) both;
+    }
+    .b-row:last-child { border-bottom: none; }
+    @keyframes bin { from { opacity:0; transform:translateX(-6px); } }
+    .b-num {
+      font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500;
+      color: var(--amber); background: var(--amber-bg);
+      border: 1px solid rgba(245,166,35,0.2); border-radius: 3px;
+      padding: 1px 5px; flex-shrink: 0; margin-top: 1px; min-width: 22px; text-align: center;
+    }
+    .b-text { font-size: 12.5px; line-height: 1.55; color: var(--text); }
+
+    .insights { display: flex; flex-direction: column; }
+    .i-row {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 7px 0; border-bottom: 1px solid var(--line-2);
+    }
+    .i-row:last-child { border-bottom: none; }
+    .i-icon { color: var(--amber); flex-shrink: 0; opacity: 0.7; margin-top: 2px; }
+    .i-text { font-size: 12px; line-height: 1.55; color: var(--text-2); }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 11px 12px 12px; border-top: 1px solid var(--line);
+      background: var(--bg); display: flex; flex-direction: column; gap: 8px;
+    }
+    .btn-row { display: flex; gap: 7px; }
+
+    .btn-cta {
+      flex: 1; padding: 10px 16px;
+      background: var(--amber); color: var(--bg);
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+      border-radius: var(--r);
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      transition: background 0.15s, transform 0.1s; outline: none;
+    }
+    .btn-cta:hover { background: #f9b840; }
+    .btn-cta:active { transform: scale(0.98); }
+    .btn-cta:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+    .btn-cta:disabled { background: var(--bg-3); color: var(--text-3); cursor: not-allowed; }
+
+    .btn-sec {
+      padding: 9px 12px; background: var(--bg-2); color: var(--text-2);
+      border: 1px solid var(--line); border-radius: var(--r);
+      font-size: 12px; font-weight: 500;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.15s; outline: none; white-space: nowrap;
+    }
+    .btn-sec:hover { background: var(--bg-3); color: var(--text); border-color: rgba(245,166,35,0.2); }
+    .btn-sec.active { background: var(--amber-bg2); border-color: rgba(245,166,35,0.3); color: var(--amber); }
+    .btn-sec:focus-visible { outline: 1px solid var(--amber); outline-offset: 1px; }
+
+    .btn-icon {
+      width: 32px; height: 32px; background: var(--bg-2); color: var(--text-3);
+      border: 1px solid var(--line); border-radius: var(--r);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; outline: none; flex-shrink: 0;
+    }
+    .btn-icon:hover { background: var(--bg-3); color: var(--text); }
+    .btn-icon:focus-visible { outline: 1px solid var(--amber); outline-offset: 1px; }
+
+    .toast {
+      height: 0; overflow: hidden;
+      font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-align: center;
+      transition: height 0.2s var(--ease), opacity 0.2s; opacity: 0;
+    }
+    .toast.show { height: 16px; opacity: 1; }
+    .toast.ok  { color: var(--green); }
+    .toast.err { color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-aperture">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="13" r="11" stroke="#f5a623" stroke-width="1.2" opacity="0.8"/>
+          <circle cx="13" cy="13" r="7"  stroke="#f5a623" stroke-width="0.8" opacity="0.45"/>
+          <line x1="13" y1="1"  x2="13" y2="5"  stroke="#f5a623" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+          <line x1="13" y1="21" x2="13" y2="25" stroke="#f5a623" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+          <line x1="1"  y1="13" x2="5"  y2="13" stroke="#f5a623" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+          <line x1="21" y1="13" x2="25" y2="13" stroke="#f5a623" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+          <circle cx="13" cy="13" r="2.5" fill="#f5a623"/>
+          <circle cx="13" cy="13" r="1"   fill="#0b0a07"/>
+        </svg>
+      </div>
+      <span class="logo-name">Le<em>n</em>s</span>
+    </div>
+    <div class="hdr-right">
+      <span class="version-tag">v1.0</span>
+      <button class="hdr-btn" id="refreshBtn" title="Re-summarize" style="display:none" aria-label="Re-summarize">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- PAGE STRIP -->
+  <div class="page-strip">
+    <img class="favicon" id="favicon" src="" alt="" width="14" height="14" />
+    <div class="page-meta">
+      <div class="page-title"  id="pageTitle">Loading…</div>
+      <div class="page-domain" id="pageDomain"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- IDLE -->
+    <div class="panel panel-idle active" id="panelIdle">
+      <div class="idle-graphic">
+        <div class="idle-ring"></div>
+        <div class="idle-ring"></div>
+        <div class="idle-ring"></div>
+        <div class="idle-dot"></div>
+      </div>
+      <div class="idle-heading">Ready to focus</div>
+      <div class="idle-sub">Click Summarize to extract key insights from this page using AI.</div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="panel panel-loading" id="panelLoading">
+      <div class="scanner">
+        <div class="scanner-track"></div>
+        <div class="scanner-ring"></div>
+        <div class="scanner-dot"></div>
+      </div>
+      <div class="loading-label">Analyzing</div>
+      <div class="loading-step" id="loadingStep">Extracting content…</div>
+      <div class="dots"><span></span><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="panel panel-error" id="panelError">
+      <div class="error-card">
+        <div class="error-header">
+          <div class="error-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#e05c4b" stroke-width="2.5"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <span class="error-label">Error</span>
+        </div>
+        <div class="error-msg" id="errorMsg">Something went wrong.</div>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="panel panel-summary" id="panelSummary">
+      <div class="cache-notice" id="cacheNotice">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.79"/></svg>
+        Cached result
+      </div>
+      <div class="s-block">
+        <div class="s-label">Overview</div>
+        <div class="overview" id="overview"></div>
+      </div>
+      <div class="stat-row" id="statRow"></div>
+      <div class="s-block">
+        <div class="s-label">Key Points</div>
+        <ul class="bullets" id="bullets"></ul>
+      </div>
+      <div class="s-block" style="padding-bottom:16px">
+        <div class="s-label">Insights</div>
+        <div class="insights" id="insights"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="btn-row" id="rowPrimary">
+      <button class="btn-cta" id="summarizeBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Summarize Page
+      </button>
+    </div>
+    <div class="btn-row" id="rowActions" style="display:none">
+      <button class="btn-sec" id="highlightBtn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Highlight
+      </button>
+      <button class="btn-sec" id="copyBtn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+      <button class="btn-icon" id="clearBtn" title="Clear">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </footer>
+
+  <script src="src/popup.js"></script>
+</body>
+</html>

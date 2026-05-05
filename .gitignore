@@ -1,0 +1,9 @@
+# IMPORTANT — keeps your API key off GitHub
+# Before pushing to GitHub, remove your key from background.js
+# Replace it with: "YOUR_GROQ_API_KEY_HERE"
+src/config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+.vscode/
